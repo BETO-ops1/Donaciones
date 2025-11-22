@@ -1,0 +1,7 @@
+com\dao\FabricaDao.class
+com\dao\DonacionDAO.class
+com\control\DonacionControl.class
+com\control\ReviewControl.class
+com\dao\DonacionDaoPostgre.class
+com\dao\FabricaDaoDonaciones.class
+com\modelo\DonacionDTO.class
