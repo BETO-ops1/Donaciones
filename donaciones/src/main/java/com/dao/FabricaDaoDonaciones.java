@@ -9,11 +9,12 @@ public class FabricaDaoDonaciones extends FabricaDao{
 
     @Override
     public DonacionDAO crearDonacionDao(String tipo) {
-        if(tipo.equals("POSTGRE")){
+        if(tipo.equals("POSTGRE"))
             return new DonacionDaoPostgre();
-        }
-        return null;
+        else
+            
+        return (DonacionDAO) new DonacionDaoMongoDB();
         
     }
-
+    
 }

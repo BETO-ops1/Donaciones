@@ -46,7 +46,7 @@ public class ReviewControl extends HttpServlet {
        
         FabricaDao fab=new FabricaDaoDonaciones();
         DonacionDaoPostgre DonacionDAO = (DonacionDaoPostgre) fab.crearDonacionDao("POSTGRE");
-       
+       // DonacionDaoMongoDB DonacionDAO = (DonacionDaoMongoDB) fab.crearDonacionDao()
         DonacionDTO ob=new DonacionDTO(tipoDonacion, nombre, correo, numeroContacto, tipoIdentificacion, identificacion, entidadBancaria, monto, mensaje);
         int num= DonacionDAO.insertarDonacion(ob);
         
