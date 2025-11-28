@@ -10,6 +10,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class DonacionDaoPostgre implements DonacionDAO {
@@ -17,8 +18,6 @@ public class DonacionDaoPostgre implements DonacionDAO {
     static final String URL = "jdbc:postgresql://localhost:5432/donaciones";
     private static final String USER = "postgres";
     private static final String PASSWORD = "123456789";
-
-    int res = 0;
 
     public DonacionDaoPostgre() {
         try {
@@ -28,36 +27,47 @@ public class DonacionDaoPostgre implements DonacionDAO {
         }
     }
 
-   
-    public boolean autenticar(String correo, String password) {
-        
-        String sql = "SELECT * FROM usuarios WHERE correo = ? AND password = ?";
-
-        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement ps = connection.prepareStatement(sql)) {
-
-            ps.setString(1, correo);
-            ps.setString(2, password); // <- en la vida real debe ir encriptada
-
-            ResultSet rs = ps.executeQuery();
-
-            return rs.next(); // si encontró un usuario, autenticación exitosa
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
+    private Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 
-    // -------------------------------------------------------------------------
-    //   INSERTAR DONACIÓN
-    // -------------------------------------------------------------------------
     @Override
-    public int insertarDonacion(DonacionDTO ob) {
+    public List<DonacionDTO> listarDonaciones() throws Exception {
+        List<DonacionDTO> lista = new ArrayList<>();
+        String sql = "SELECT * FROM registrodonaciones";
+
+        try (Connection con = getConnection();
+             PreparedStatement pst = con.prepareStatement(sql);
+             ResultSet rs = pst.executeQuery()) {
+
+            while (rs.next()) {
+                lista.add(new DonacionDTO(
+                        rs.getString("tipoDonacion"),
+                        rs.getString("nombre"),
+                        rs.getString("correo"),
+                        rs.getString("numeroContacto"),
+                        rs.getString("tipoIdentificacion"),
+                        rs.getString("identificacion"),
+                        rs.getString("entidadBancaria"),
+                        rs.getDouble("monto"),
+                        rs.getString("mensaje")
+                ));
+            }
+        }
+        return lista;
+    }
+
+    @Override
+    public DonacionDTO obtenerDonacionPorId(int id) throws Exception {
+        return consultarDonacion(id);
+    }
+
+    @Override
+    public int insertarDonacion(DonacionDTO ob) throws Exception {
         String sql = "INSERT INTO registrodonaciones (tipoDonacion, nombre, correo, numeroContacto, tipoIdentificacion, identificacion, entidadBancaria, monto, mensaje) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement ps = connection.prepareStatement(sql)) {
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, ob.getTipoDonacion());
             ps.setString(2, ob.getNombre());
@@ -69,26 +79,38 @@ public class DonacionDaoPostgre implements DonacionDAO {
             ps.setDouble(8, ob.getMonto());
             ps.setString(9, ob.getMensaje());
 
-            res = ps.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Error en insertarDonacion...");
+            return ps.executeUpdate();
         }
-        return res;
     }
 
+    @Override
+    public int actualizarDonacion(DonacionDTO ob) throws Exception {
+        throw new UnsupportedOperationException("No implementado");
+    }
 
     @Override
-    public DonacionDTO consultarDonacion(int id) {
+    public int eliminarDonacion(int id) throws Exception {
+        String sql = "DELETE FROM registrodonaciones WHERE registrodonaciones_id = ?";
+
+        try (Connection con = getConnection();
+             PreparedStatement pst = con.prepareStatement(sql)) {
+
+            pst.setInt(1, id);
+            return pst.executeUpdate();
+        }
+    }
+
+    @Override
+    public DonacionDTO consultarDonacion(int id) throws Exception {
+
         String sql = "SELECT * FROM registrodonaciones WHERE registrodonaciones_id = ?";
         DonacionDTO dto = null;
 
-        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement ps = connection.prepareStatement(sql)) {
+        try (Connection con = getConnection();
+             PreparedStatement pst = con.prepareStatement(sql)) {
 
-            ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
+            pst.setInt(1, id);
+            ResultSet rs = pst.executeQuery();
 
             if (rs.next()) {
                 dto = new DonacionDTO(
@@ -103,22 +125,8 @@ public class DonacionDaoPostgre implements DonacionDAO {
                         rs.getString("mensaje")
                 );
             }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Error en consultarDonacion...");
         }
 
         return dto;
-    }
-
-    @Override
-    public List<DonacionDTO> listarTodos() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void borrar(int id) {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

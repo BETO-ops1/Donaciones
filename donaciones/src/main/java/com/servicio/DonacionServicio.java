@@ -4,85 +4,110 @@
  */
 package com.servicio;
 
-import com.dao.DonacionDaoMongoDB;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.dao.DonacionDAO;
+import com.dao.FabricaDaoDonaciones;
 import com.modelo.DonacionDTO;
-
 import java.util.List;
 
 public class DonacionServicio {
 
-    private final DonacionDaoMongoDB donacionDao;
+    private final Gson gson = new Gson();
+    private final DonacionDAO dao;
 
-    // ----------------------------------------------
-    // CONSTRUCTOR
-    // ----------------------------------------------
     public DonacionServicio() {
-        this.donacionDao = new DonacionDaoMongoDB(); // crea la conexión una sola vez
+        this.dao = new FabricaDaoDonaciones().crearDonacionDao("POSTGRE");
     }
 
-    // ----------------------------------------------
-    // REGISTRAR DONACIÓN
-    // ----------------------------------------------
-    public String registrarDonacion(DonacionDTO donacion) {
+    // ================= LISTAR ===================
 
-        // -------- VALIDACIONES --------
-        
-        if (donacion.getNombre() == null || donacion.getNombre().isEmpty()) {
-            return "El nombre es obligatorio.";
-        }
+    public JsonObject listar() {
+        JsonObject res = new JsonObject();
+        JsonArray arr = new JsonArray();
 
-        if (donacion.getCorreo() == null || !donacion.getCorreo().contains("@")) {
-            return "Correo inválido.";
-        }
-
-        if (donacion.getNumeroContacto() == null || donacion.getNumeroContacto().length() < 7) {
-            return "Número de contacto inválido.";
-        }
-
-        // Validación por tipo de donación
-        if (donacion.getTipoDonacion().equalsIgnoreCase("dinero")) {
-            if (donacion.getMonto() <= 0) {
-                return "Debe ingresar un monto válido.";
+        try {
+            List<DonacionDTO> lista = dao.listarDonaciones();
+            for (DonacionDTO d : lista) {
+                arr.add(gson.toJsonTree(d));
             }
-            if (donacion.getEntidadBancaria() == null || donacion.getEntidadBancaria().isEmpty()) {
-                return "Debe indicar la entidad bancaria.";
+
+            res.addProperty("success", true);
+            res.add("data", arr);
+
+        } catch (Exception e) {
+            res.addProperty("success", false);
+            res.addProperty("mensaje", "Error al listar: " + e.getMessage());
+        }
+        return res;
+    }
+
+    // ================= GET POR ID ===================
+
+    public JsonObject obtener(int id) {
+        JsonObject res = new JsonObject();
+        try {
+            DonacionDTO dto = dao.consultarDonacion(id);
+
+            if (dto == null) {
+                res.addProperty("success", false);
+                res.addProperty("mensaje", "No existe la donación");
+            } else {
+                res.addProperty("success", true);
+                res.add("data", gson.toJsonTree(dto));
             }
-        } else if (donacion.getTipoDonacion().equalsIgnoreCase("especie")) {
-            // donación en especie NO lleva monto ni banco
-        } else {
-            return "Tipo de donación inválido.";
+
+        } catch (Exception e) {
+            res.addProperty("success", false);
+            res.addProperty("mensaje", "Error al obtener: " + e.getMessage());
+        }
+        return res;
+    }
+
+    // ================= INSERTAR ===================
+
+    public JsonObject insertar(JsonObject json) {
+        JsonObject res = new JsonObject();
+
+        try {
+            DonacionDTO d = gson.fromJson(json, DonacionDTO.class);
+            int r = dao.insertarDonacion(d);
+
+            if (r > 0) {
+                res.addProperty("success", true);
+                res.addProperty("mensaje", "Donación registrada");
+            } else {
+                res.addProperty("success", false);
+                res.addProperty("mensaje", "No se pudo registrar");
+            }
+
+        } catch (Exception e) {
+            res.addProperty("success", false);
+            res.addProperty("mensaje", "Error al insertar: " + e.getMessage());
         }
 
-        // Guardar en BD
-        int resultado = donacionDao.insertarDonacion(donacion);
+        return res;
+    }
 
-        if (resultado == 1) {
-            return "Donación registrada correctamente.";
-        } else {
-            return "Error al registrar la donación.";
+    // ================= ELIMINAR ===================
+
+    public JsonObject eliminar(int id) {
+        JsonObject res = new JsonObject();
+        try {
+            int r = dao.eliminarDonacion(id);
+            if (r > 0) {
+                res.addProperty("success", true);
+                res.addProperty("mensaje", "Donación eliminada");
+            } else {
+                res.addProperty("success", false);
+                res.addProperty("mensaje", "No se encontró");
+            }
+
+        } catch (Exception e) {
+            res.addProperty("success", false);
+            res.addProperty("mensaje", "Error al eliminar: " + e.getMessage());
         }
+        return res;
     }
-
-    // ----------------------------------------------
-    // CONSULTAR DONACIÓN POR ObjectId
-    // ----------------------------------------------
-    public DonacionDTO obtenerDonacionPorId(String objectId) {
-        return donacionDao.consultarPorObjectId(objectId);
-    }
-
-    // ----------------------------------------------
-    // LISTAR TODAS LAS DONACIONES
-    // ----------------------------------------------
-    public List<DonacionDTO> listarDonaciones() {
-        return donacionDao.listarTodos();
-    }
-
-    // ----------------------------------------------
-    // ELIMINAR DONACIÓN
-    // ----------------------------------------------
-    public String eliminarDonacion(String objectId) {
-        donacionDao.borrarPorObjectId(objectId);
-        return "Donación eliminada (si existía).";
-    }
-
 }

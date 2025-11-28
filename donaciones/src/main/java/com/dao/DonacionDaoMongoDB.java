@@ -67,7 +67,7 @@ public class DonacionDaoMongoDB implements DonacionDAO {
     // -------------------------------------------------------------
     // CONSULTAR (Mongo NO usa int, así que este método no aplica)
     // -------------------------------------------------------------
-    @Override
+    
     public DonacionDTO consultarDonacion(int id) {
         System.out.println("MongoDB no utiliza enteros como ID. Utilice consultarPorObjectId().");
         return null;
@@ -102,7 +102,7 @@ public class DonacionDaoMongoDB implements DonacionDAO {
     // -------------------------------------------------------------
     // LISTAR TODOS
     // -------------------------------------------------------------
-    @Override
+    
     public List<DonacionDTO> listarTodos() {
 
         List<DonacionDTO> lista = new ArrayList<>();
@@ -135,7 +135,7 @@ public class DonacionDaoMongoDB implements DonacionDAO {
     // -------------------------------------------------------------
     // BORRAR
     // -------------------------------------------------------------
-    @Override
+    
     public void borrar(int id) {
         System.out.println("MongoDB no usa int como ID. Use borrarPorObjectId().");
     }
@@ -147,6 +147,26 @@ public class DonacionDaoMongoDB implements DonacionDAO {
         } catch (Exception e) {
             System.out.println("ERROR BORRANDO: " + e.getMessage());
         }
+    }
+
+    @Override
+    public List<DonacionDTO> listarDonaciones() throws Exception {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    @Override
+    public DonacionDTO obtenerDonacionPorId(int id) throws Exception {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    @Override
+    public int actualizarDonacion(DonacionDTO donacion) throws Exception {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    @Override
+    public int eliminarDonacion(int id) throws Exception {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
 }
